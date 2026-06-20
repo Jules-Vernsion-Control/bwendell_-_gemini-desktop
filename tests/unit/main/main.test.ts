@@ -94,6 +94,7 @@ vi.mock('../../../src/main/utils/security', () => ({
     setupHeaderStripping: vi.fn(),
     setupWebviewSecurity: vi.fn(),
     setupMediaPermissions: vi.fn(),
+    setupUserAgent: vi.fn(),
 }));
 
 vi.mock('../../../src/main/utils/sandboxInit', () => ({}));
@@ -255,5 +256,16 @@ describe('main.ts', () => {
             ([flag, value]) => flag === 'enable-features' && value === 'GlobalShortcutsPortal'
         );
         expect(hasGlobalShortcutsPortal).toBe(false);
+    });
+
+    it('sets up security features on startup', async () => {
+        const { setupHeaderStripping, setupMediaPermissions, setupUserAgent } = await import(
+            '../../../src/main/utils/security'
+        );
+        await import('../../../src/main/main');
+
+        expect(setupHeaderStripping).toHaveBeenCalledWith(mockSession.defaultSession);
+        expect(setupMediaPermissions).toHaveBeenCalledWith(mockSession.defaultSession);
+        expect(setupUserAgent).toHaveBeenCalledWith(mockSession.defaultSession);
     });
 });

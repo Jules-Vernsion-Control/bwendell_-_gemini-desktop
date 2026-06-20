@@ -5,6 +5,7 @@
  */
 
 import type { Session, App } from 'electron';
+import { CUSTOM_USER_AGENT } from './constants';
 import { getPlatformAdapter } from '../platform/platformAdapterFactory';
 import { createLogger } from './logger';
 
@@ -55,6 +56,17 @@ export function setupHeaderStripping(session: Session): void {
     });
 
     logger.log('Header stripping enabled for Gemini domains only');
+}
+
+/**
+ * Configure custom User-Agent for the session.
+ * Prevents Google from blocking authentication attempts with a 403 error.
+ *
+ * @param session - The Electron session to configure
+ */
+export function setupUserAgent(session: Session): void {
+    session.setUserAgent(CUSTOM_USER_AGENT);
+    logger.log('Custom User-Agent configured for session');
 }
 
 /**

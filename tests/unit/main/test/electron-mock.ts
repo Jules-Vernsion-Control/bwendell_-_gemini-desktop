@@ -173,6 +173,7 @@ export const session = {
             remove: vi.fn(),
         },
         setPermissionRequestHandler: vi.fn(),
+        setUserAgent: vi.fn(),
     },
 };
 

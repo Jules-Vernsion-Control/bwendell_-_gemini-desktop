@@ -378,3 +378,14 @@ export const TRAY_MENU_ITEMS: Record<string, TrayMenuItem> = {
  * Tooltip for the tray icon.
  */
 export const TRAY_TOOLTIP = 'Gemini Desktop' as const;
+
+/**
+ * Standard browser User-Agent string to prevent Google 403 errors.
+ * Mimics a modern Chrome browser on the current platform.
+ */
+export const CUSTOM_USER_AGENT =
+    process.platform === 'darwin'
+        ? 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36'
+        : process.platform === 'win32'
+          ? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36'
+          : 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36';

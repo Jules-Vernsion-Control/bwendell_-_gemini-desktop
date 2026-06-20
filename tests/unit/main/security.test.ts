@@ -153,6 +153,19 @@ describe('setupHeaderStripping', () => {
     });
 });
 
+describe('setupUserAgent', () => {
+    const mockSession = electron.session as any;
+
+    it('sets custom User-Agent on session', async () => {
+        const { setupUserAgent } = await import('../../../src/main/utils/security');
+        const { CUSTOM_USER_AGENT } = await import('../../../src/main/utils/constants');
+
+        setupUserAgent(mockSession.defaultSession);
+
+        expect(mockSession.defaultSession.setUserAgent).toHaveBeenCalledWith(CUSTOM_USER_AGENT);
+    });
+});
+
 describe('setupMediaPermissions', () => {
     const mockSession = electron.session as any;
     let permissionHandler: (

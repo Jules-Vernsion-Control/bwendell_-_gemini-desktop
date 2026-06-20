@@ -18,7 +18,12 @@ import './utils/sandboxInit';
 import { app, BrowserWindow, crashReporter, session } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
-import { setupHeaderStripping, setupWebviewSecurity, setupMediaPermissions } from './utils/security';
+import {
+    setupHeaderStripping,
+    setupWebviewSecurity,
+    setupMediaPermissions,
+    setupUserAgent,
+} from './utils/security';
 import { getDistHtmlPath } from './utils/paths';
 import { getPlatformAdapter } from './platform/platformAdapterFactory';
 
@@ -335,6 +340,7 @@ if (!gotTheLock) {
         // Apply security settings to default session (used by all windows)
         setupHeaderStripping(session.defaultSession);
         setupMediaPermissions(session.defaultSession);
+        setupUserAgent(session.defaultSession);
 
         appContext?.ipcManager.setupIpcHandlers();
 
