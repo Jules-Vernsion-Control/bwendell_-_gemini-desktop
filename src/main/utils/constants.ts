@@ -380,12 +380,28 @@ export const TRAY_MENU_ITEMS: Record<string, TrayMenuItem> = {
 export const TRAY_TOOLTIP = 'Gemini Desktop' as const;
 
 /**
- * Standard browser User-Agent string to prevent Google 403 errors.
- * Mimics a modern Chrome browser on the current platform.
+ * Get a standard browser User-Agent string to prevent Google 403 errors.
+ * Mimics a modern Chrome browser on the current platform, using the
+ * runtime Chrome version from Electron.
+ *
+ * @returns A standard browser User-Agent string
  */
-export const CUSTOM_USER_AGENT =
-    process.platform === 'darwin'
-        ? 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36'
-        : process.platform === 'win32'
-          ? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36'
-          : 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36';
+export function getCustomUserAgent(): string {
+    const chromeVersion = process.versions.chrome;
+
+    if (process.platform === 'darwin') {
+        return `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersion} Safari/537.36`;
+    }
+
+    if (process.platform === 'win32') {
+        return `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersion} Safari/537.36`;
+    }
+
+    return `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersion} Safari/537.36`;
+}
+
+/**
+ * Standard browser User-Agent string to prevent Google 403 errors.
+ * Evaluated at runtime to use current Chrome version.
+ */
+export const CUSTOM_USER_AGENT = getCustomUserAgent();

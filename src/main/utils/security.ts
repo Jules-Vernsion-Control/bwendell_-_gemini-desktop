@@ -59,14 +59,44 @@ export function setupHeaderStripping(session: Session): void {
 }
 
 /**
- * Configure custom User-Agent for the session.
+ * Configure custom User-Agent and request headers for the session.
  * Prevents Google from blocking authentication attempts with a 403 error.
+ *
+ * SECURITY: Standardizes the User-Agent and removes Electron-identifying headers
+ * to ensure compatibility with Google OAuth and the Gemini web app.
  *
  * @param session - The Electron session to configure
  */
 export function setupUserAgent(session: Session): void {
+    // 1. Set the User-Agent on the session itself
     session.setUserAgent(CUSTOM_USER_AGENT);
-    logger.log('Custom User-Agent configured for session');
+
+    // 2. Use onBeforeSendHeaders to force the User-Agent and remove X-Requested-With
+    // This is more robust as it catches requests where the browser might try to
+    // add its own headers or revert the User-Agent.
+    session.webRequest.onBeforeSendHeaders(
+        {
+            urls: [
+                'https://accounts.google.com/*',
+                'https://gemini.google.com/*',
+                'https://aistudio.google.com/*',
+            ],
+        },
+        (details, callback) => {
+            const requestHeaders = { ...details.requestHeaders };
+
+            // Ensure the custom User-Agent is used
+            requestHeaders['User-Agent'] = CUSTOM_USER_AGENT;
+
+            // Remove X-Requested-With which often contains the app name or Electron,
+            // which Google uses to block "embedded browsers".
+            delete requestHeaders['X-Requested-With'];
+
+            callback({ requestHeaders });
+        }
+    );
+
+    logger.log('Custom User-Agent and header masking configured for session');
 }
 
 /**

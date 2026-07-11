@@ -156,13 +156,51 @@ describe('setupHeaderStripping', () => {
 describe('setupUserAgent', () => {
     const mockSession = electron.session as any;
 
-    it('sets custom User-Agent on session', async () => {
+    let headerCallback: (
+        details: { requestHeaders: Record<string, string> },
+        callback: (result: { requestHeaders: Record<string, string> }) => void
+    ) => void;
+
+    beforeEach(() => {
+        (mockSession.defaultSession.webRequest.onBeforeSendHeaders as any).mockImplementation(
+            (_filter: any, callback: any) => {
+                headerCallback = callback;
+            }
+        );
+    });
+
+    it('sets custom User-Agent on session and registers header handler', async () => {
         const { setupUserAgent } = await import('../../../src/main/utils/security');
         const { CUSTOM_USER_AGENT } = await import('../../../src/main/utils/constants');
 
         setupUserAgent(mockSession.defaultSession);
 
         expect(mockSession.defaultSession.setUserAgent).toHaveBeenCalledWith(CUSTOM_USER_AGENT);
+        expect(mockSession.defaultSession.webRequest.onBeforeSendHeaders).toHaveBeenCalled();
+    });
+
+    it('forces User-Agent and removes X-Requested-With in headers', async () => {
+        const { setupUserAgent } = await import('../../../src/main/utils/security');
+        const { CUSTOM_USER_AGENT } = await import('../../../src/main/utils/constants');
+
+        setupUserAgent(mockSession.defaultSession);
+
+        const details = {
+            requestHeaders: {
+                'User-Agent': 'Old User Agent',
+                'X-Requested-With': 'com.benwendell.gemini-desktop',
+                'Accept-Language': 'en-US',
+            },
+        };
+
+        let result: { requestHeaders: Record<string, string> } | undefined;
+        headerCallback(details, (res) => {
+            result = res;
+        });
+
+        expect(result!.requestHeaders['User-Agent']).toBe(CUSTOM_USER_AGENT);
+        expect(result!.requestHeaders['X-Requested-With']).toBeUndefined();
+        expect(result!.requestHeaders['Accept-Language']).toBe('en-US');
     });
 });
 
