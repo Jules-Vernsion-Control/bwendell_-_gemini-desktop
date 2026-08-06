@@ -5,6 +5,7 @@
  */
 
 import type { Session, App } from 'electron';
+import { CUSTOM_USER_AGENT } from './constants';
 import { getPlatformAdapter } from '../platform/platformAdapterFactory';
 import { createLogger } from './logger';
 
@@ -55,6 +56,58 @@ export function setupHeaderStripping(session: Session): void {
     });
 
     logger.log('Header stripping enabled for Gemini domains only');
+}
+
+/**
+ * Configure custom User-Agent and request headers for the session.
+ * Prevents Google from blocking authentication attempts with a 403 error.
+ *
+ * SECURITY: Standardizes the User-Agent and removes Electron-identifying headers
+ * to ensure compatibility with Google OAuth and the Gemini web app.
+ *
+ * @param session - The Electron session to configure
+ */
+export function setupUserAgent(session: Session): void {
+    // 1. Set the User-Agent on the session itself
+    session.setUserAgent(CUSTOM_USER_AGENT);
+
+    // 2. Derive robust URL filters to ensure coverage matches our internally-handled domains.
+    // This covers accounts.google.com, accounts.youtube.com, gemini.google.com, subdomains, etc.
+    const urlFilters = [
+        'https://accounts.google.com/*',
+        'https://*.accounts.google.com/*',
+        'https://accounts.youtube.com/*',
+        'https://*.accounts.youtube.com/*',
+        'https://gemini.google.com/*',
+        'https://*.gemini.google.com/*',
+        'https://aistudio.google.com/*',
+        'https://*.aistudio.google.com/*',
+        'https://ogs.google.com/*',
+        'https://*.ogs.google.com/*',
+    ];
+
+    // 3. Use onBeforeSendHeaders to force the User-Agent and remove X-Requested-With.
+    // This is more robust as it catches requests where the browser might try to
+    // add its own headers or revert the User-Agent.
+    session.webRequest.onBeforeSendHeaders(
+        {
+            urls: urlFilters,
+        },
+        (details, callback) => {
+            const requestHeaders = { ...details.requestHeaders };
+
+            // Ensure the custom User-Agent is used
+            requestHeaders['User-Agent'] = CUSTOM_USER_AGENT;
+
+            // Remove X-Requested-With which often contains the app name or Electron,
+            // which Google uses to block "embedded browsers".
+            delete requestHeaders['X-Requested-With'];
+
+            callback({ requestHeaders });
+        }
+    );
+
+    logger.log('Custom User-Agent and header masking configured for session');
 }
 
 /**

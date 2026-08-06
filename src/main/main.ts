@@ -16,9 +16,15 @@
 import './utils/sandboxInit';
 
 import { app, BrowserWindow, crashReporter, session } from 'electron';
+import { CUSTOM_USER_AGENT } from './utils/constants';
 import * as fs from 'fs';
 import * as path from 'path';
-import { setupHeaderStripping, setupWebviewSecurity, setupMediaPermissions } from './utils/security';
+import {
+    setupHeaderStripping,
+    setupWebviewSecurity,
+    setupMediaPermissions,
+    setupUserAgent,
+} from './utils/security';
 import { getDistHtmlPath } from './utils/paths';
 import { getPlatformAdapter } from './platform/platformAdapterFactory';
 
@@ -36,6 +42,10 @@ logger.debug('CI:', process.env.CI || 'NOT SET');
 logger.debug('ELECTRON_USE_DIST:', process.env.ELECTRON_USE_DIST || 'NOT SET');
 logger.debug('app.isReady():', app.isReady());
 logger.debug('===================================');
+
+// 1. Set User-Agent fallback as early as possible (at module load time)
+// This affects the default User-Agent for all windows created subsequently.
+app.userAgentFallback = CUSTOM_USER_AGENT;
 
 // Apply platform-specific configuration via adapter
 const platformAdapter = getPlatformAdapter();
@@ -335,6 +345,7 @@ if (!gotTheLock) {
         // Apply security settings to default session (used by all windows)
         setupHeaderStripping(session.defaultSession);
         setupMediaPermissions(session.defaultSession);
+        setupUserAgent(session.defaultSession);
 
         appContext?.ipcManager.setupIpcHandlers();
 
