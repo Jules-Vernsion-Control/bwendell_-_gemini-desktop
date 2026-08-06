@@ -380,14 +380,20 @@ export const TRAY_MENU_ITEMS: Record<string, TrayMenuItem> = {
 export const TRAY_TOOLTIP = 'Gemini Desktop' as const;
 
 /**
+ * Default fallback Chrome version when process.versions.chrome is unavailable (e.g. non-Electron/Node test environments).
+ */
+const FALLBACK_CHROME_VERSION = '133.0.0.0';
+
+/**
  * Get a standard browser User-Agent string to prevent Google 403 errors.
  * Mimics a modern Chrome browser on the current platform, using the
- * runtime Chrome version from Electron.
+ * runtime Chrome version from Electron (with fallback).
  *
  * @returns A standard browser User-Agent string
  */
 export function getCustomUserAgent(): string {
-    const chromeVersion = process.versions.chrome;
+    const chromeVersion = process.versions.chrome ?? FALLBACK_CHROME_VERSION;
+    const arch = process.arch === 'arm64' ? 'aarch64' : 'x86_64';
 
     if (process.platform === 'darwin') {
         return `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersion} Safari/537.36`;
@@ -397,7 +403,7 @@ export function getCustomUserAgent(): string {
         return `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersion} Safari/537.36`;
     }
 
-    return `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersion} Safari/537.36`;
+    return `Mozilla/5.0 (X11; Linux ${arch}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersion} Safari/537.36`;
 }
 
 /**

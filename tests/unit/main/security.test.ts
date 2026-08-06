@@ -202,6 +202,17 @@ describe('setupUserAgent', () => {
         expect(result!.requestHeaders['X-Requested-With']).toBeUndefined();
         expect(result!.requestHeaders['Accept-Language']).toBe('en-US');
     });
+
+    it('produces a valid User-Agent structure', async () => {
+        const { getCustomUserAgent } = await import('../../../src/main/utils/constants');
+        const ua = getCustomUserAgent();
+
+        expect(ua).toMatch(/Chrome\/\d+\.\d+\.\d+\.\d+ Safari\/537\.36$/);
+        expect(ua).not.toContain('Electron');
+        expect(ua).not.toContain('gemini-desktop');
+        expect(ua).not.toContain('node');
+        expect(ua).not.toContain('undefined');
+    });
 });
 
 describe('setupMediaPermissions', () => {

@@ -71,16 +71,27 @@ export function setupUserAgent(session: Session): void {
     // 1. Set the User-Agent on the session itself
     session.setUserAgent(CUSTOM_USER_AGENT);
 
-    // 2. Use onBeforeSendHeaders to force the User-Agent and remove X-Requested-With
+    // 2. Derive robust URL filters to ensure coverage matches our internally-handled domains.
+    // This covers accounts.google.com, accounts.youtube.com, gemini.google.com, subdomains, etc.
+    const urlFilters = [
+        'https://accounts.google.com/*',
+        'https://*.accounts.google.com/*',
+        'https://accounts.youtube.com/*',
+        'https://*.accounts.youtube.com/*',
+        'https://gemini.google.com/*',
+        'https://*.gemini.google.com/*',
+        'https://aistudio.google.com/*',
+        'https://*.aistudio.google.com/*',
+        'https://ogs.google.com/*',
+        'https://*.ogs.google.com/*',
+    ];
+
+    // 3. Use onBeforeSendHeaders to force the User-Agent and remove X-Requested-With.
     // This is more robust as it catches requests where the browser might try to
     // add its own headers or revert the User-Agent.
     session.webRequest.onBeforeSendHeaders(
         {
-            urls: [
-                'https://accounts.google.com/*',
-                'https://gemini.google.com/*',
-                'https://aistudio.google.com/*',
-            ],
+            urls: urlFilters,
         },
         (details, callback) => {
             const requestHeaders = { ...details.requestHeaders };
